@@ -493,6 +493,107 @@ export default function Dashboard() {
     fetchAlumniData()
   }, [])
 
+  // Scroll to section when hash is present (e.g., #achievements)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash
+      if (hash) {
+        const id = hash.replace('#', '')
+        const el = document.getElementById(id)
+        if (el) el.scrollIntoView({ behavior: 'smooth' })
+      }
+    }
+  }, [])
+
+  /* Achievements section: inline in dashboard (CRUD via /api/achievements) */
+  const [achievements, setAchievements] = useState<any[]>([])
+  const [achModalOpen, setAchModalOpen] = useState(false)
+  const [achEditingId, setAchEditingId] = useState<string | null>(null)
+  const [achForm, setAchForm] = useState<{ title: string; description: string; alumniName: string; designation: string; date: string; imageFile: File | null; imagePreview: string }>({
+    title: '',
+    description: '',
+    alumniName: '',
+    designation: '',
+    date: new Date().toISOString().split('T')[0],
+    imageFile: null,
+    imagePreview: ''
+  })
+
+  const loadAchievements = async () => {
+    try {
+      const res = await fetch('/api/achievements')
+      const json = await res.json()
+      if (json.success) {
+        const data = json.achievements.map((a: any) => ({ id: a._id || a.id, ...a }))
+        setAchievements(data)
+      }
+    } catch (e) {
+      console.error('Failed to load achievements', e)
+    }
+  }
+
+  useEffect(() => { loadAchievements() }, [])
+
+  const openAchCreate = () => {
+    setAchEditingId(null)
+    setAchForm({ title: '', description: '', alumniName: '', designation: '', date: new Date().toISOString().split('T')[0], imageFile: null, imagePreview: '' })
+    setAchModalOpen(true)
+  }
+
+  const handleAchImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => setAchForm(f => ({ ...f, imageFile: file, imagePreview: reader.result as string }))
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const submitAchievement = async (e?: React.FormEvent) => {
+    e?.preventDefault()
+    try {
+      const fd = new FormData()
+      fd.append('title', achForm.title)
+      fd.append('description', achForm.description)
+      fd.append('alumniName', achForm.alumniName)
+      fd.append('designation', achForm.designation)
+      fd.append('date', achForm.date)
+      if (achForm.imageFile) fd.append('image', achForm.imageFile)
+      if (achEditingId) fd.append('id', achEditingId)
+
+      const method = achEditingId ? 'PUT' : 'POST'
+      const res = await fetch('/api/achievements', { method, body: fd })
+      const json = await res.json()
+      if (!json.success) throw new Error(json.error || 'Failed')
+      toast.success(json.message || 'Saved')
+      setAchModalOpen(false)
+      await loadAchievements()
+    } catch (err: any) {
+      console.error(err)
+      toast.error('Failed to save achievement')
+    }
+  }
+
+  const editAchievement = (a: any) => {
+    setAchEditingId(a.id)
+    setAchForm({ title: a.title || '', description: a.description || '', alumniName: a.alumniName || '', designation: a.designation || '', date: a.date ? new Date(a.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0], imageFile: null, imagePreview: a.imageUrl || '' })
+    setAchModalOpen(true)
+  }
+
+  const deleteAchievement = async (id: string) => {
+    if (!confirm('Delete this achievement?')) return
+    try {
+      const res = await fetch(`/api/achievements?id=${encodeURIComponent(id)}`, { method: 'DELETE' })
+      const json = await res.json()
+      if (!json.success) throw new Error(json.error || 'Failed')
+      toast.success('Deleted')
+      await loadAchievements()
+    } catch (err) {
+      console.error(err)
+      toast.error('Failed to delete')
+    }
+  }
+
   // Load user email from localStorage
   useEffect(() => {
     const email = localStorage.getItem("userEmail")
@@ -744,9 +845,6 @@ export default function Dashboard() {
         </div>
 
 
-      </div>
-
-     
       {/* Event Mail sending */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
@@ -852,7 +950,7 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
-      )}
+      )}</div>
   <Toaster position="top-right" expand richColors closeButton />
   </div>
       </div>

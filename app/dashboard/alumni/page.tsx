@@ -21,10 +21,11 @@ async function getAllAlumni() {
       .sort({ name: 1 })
       .lean();
 
-    // Convert MongoDB documents to plain objects and stringify uid
+    // Convert MongoDB documents to plain objects and stringify uid and _id
     return alumni.map((alumni) => ({
       ...alumni,
-      uid: alumni.uid.toString(),
+      _id: alumni._id?.toString(),
+      uid: alumni.uid?.toString(),
     }));
   } catch (error) {
     console.error("Error fetching alumni:", error);

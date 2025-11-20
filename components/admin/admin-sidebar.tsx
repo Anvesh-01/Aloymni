@@ -1,7 +1,10 @@
+// components/admin/admin-sidebar.tsx
 "use client";
 import { useAuth, SignInButton } from "@clerk/nextjs";
 import { useRouter, usePathname } from "next/navigation";
 import { useUser, useClerk } from "@clerk/nextjs";
+// import { AppSidebar } from "@/components/admin/admin-sidebar";
+
 import Link from "next/link";
 import {
   Sidebar,
@@ -33,19 +36,60 @@ import {
   LogOut,
   ChevronUp,
   GraduationCap,
+  Award,
 } from "lucide-react";
 import { SignOutButton } from "@clerk/nextjs";
-const navigationItems = [
+
+// const navigationItems = [
+//   {
+//     title: "Dashboard",
+//     url: "/adminDashboard",
+//     icon: Home,
+//   },
+//   {
+//     title: "Alumni Directory",
+//     url: "/adminDashboard/alumni",
+//     icon: Users,
+//   },
+//   {
+//     title: "Achievements",
+//     url: "/adminDashboard/achievements",
+//     icon: Award,
+//   },
+//   {
+//     title: "Events",
+//     url: "/adminDashboard/events",
+//     icon: Calendar,
+//   },
+//   {
+//     title: "Settings",
+//     url: "/adminDashboard/settings",
+//     icon: Settings,
+//   },
+// ];
+
+export function AppSidebar() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { user } = useUser();
+  const { signOut } = useClerk();
+  const { isLoaded, isSignedIn } = useAuth();
+
+  const navigationItems = [
   {
     title: "Dashboard",
     url: "/adminDashboard",
     icon: Home,
   },
-
   {
     title: "Alumni Directory",
     url: "/adminDashboard/alumni",
     icon: Users,
+  },
+  {
+    title: "Achievements",
+    url: "/adminDashboard/achievements",
+    icon: Award,
   },
   {
     title: "Events",
@@ -58,13 +102,7 @@ const navigationItems = [
     icon: Settings,
   },
 ];
-
-export function AppSidebar() {
-  const router = useRouter();
-  const pathname = usePathname();
-  const { user } = useUser();
-  const { signOut } = useClerk();
-  const { isLoaded, isSignedIn } = useAuth();
+  
   const handleLogout = () => {
     signOut(() => router.push("/"));
   };
@@ -115,7 +153,6 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {navigationItems.map((item) => {
-                // Check if current path matches the menu item
                 const isActive =
                   pathname === item.url ||
                   (item.url !== "/adminDashboard" &&
@@ -147,7 +184,6 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
-              {/* The Trigger always wraps the button */}
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton
                   size="lg"
@@ -173,7 +209,6 @@ export function AppSidebar() {
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-semibold">
-                      {/* Conditionally show name or 'Guest' */}
                       {isSignedIn ? getUserName() : "Guest"}
                     </span>
                     <span className="truncate text-xs">
@@ -184,7 +219,6 @@ export function AppSidebar() {
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
 
-              {/* The Content is always rendered, but its children are conditional */}
               <DropdownMenuContent
                 className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
                 side="bottom"
@@ -192,7 +226,6 @@ export function AppSidebar() {
                 sideOffset={4}
               >
                 {isSignedIn ? (
-                  // User is signed IN
                   <>
                     <DropdownMenuItem asChild>
                       <Link href="/adminDashboard/profile">
@@ -212,7 +245,6 @@ export function AppSidebar() {
                     </DropdownMenuItem>
                   </>
                 ) : (
-                  // User is signed OUT
                   <SignInButton mode="modal">
                     <DropdownMenuItem>
                       <User className="mr-2 h-4 w-4" />
